@@ -19,7 +19,7 @@ const app = express();
 const server = http.createServer(app);
 const io = new Server(server, {
   cors: {
-    origin: "https://dev-collab-frontend-alpha.vercel.app",
+    origin: ["https://dev-collab-frontend-alpha.vercel.app", "http://localhost:5173"],
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     credentials: true,
   },
@@ -44,14 +44,13 @@ io.on("connection", (socket) => {
     io.emit("getOnlineUsers", onlineUsers);
   });
 
-  socket.on("sendMessage", ({ senderId, receiverId, text }) => {
-    const user = onlineUsers.find((user) => user.userId === receiverId);
-    if (user) {
-      io.to(user.socketId).emit("getMessage", {
-        senderId,
-        text,
-      });
-    }
+  socket.on("sendMessage", ({ senderId, senderName, senderPic, receiverId, text }) => {
+    io.to(receiverId).emit("getMessage", {
+      senderId,
+      senderName,
+      senderPic,
+      text,
+    });
   });
 
   socket.on("disconnect", () => {
