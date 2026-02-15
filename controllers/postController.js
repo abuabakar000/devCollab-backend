@@ -136,13 +136,13 @@ export const toggleLike = async (req, res) => {
           post: post._id,
         });
 
-        // Emit real-time notification
-        const io = req.app.get("socketio");
+        // Emit real-time notification via Pusher
+        const pusher = req.app.get("pusher");
         const populatedNotification = await notification.populate([
           { path: "sender", select: "name profilePic" },
           { path: "post", select: "title" }
         ]);
-        io.to(post.user.toString()).emit("newNotification", populatedNotification);
+        await pusher.trigger(`user-${post.user.toString()}`, "new-notification", JSON.parse(JSON.stringify(populatedNotification)));
       }
     }
 
@@ -179,13 +179,13 @@ export const addComment = async (req, res) => {
         post: post._id,
       });
 
-      // Emit real-time notification
-      const io = req.app.get("socketio");
+      // Emit real-time notification via Pusher
+      const pusher = req.app.get("pusher");
       const populatedNotification = await notification.populate([
         { path: "sender", select: "name profilePic" },
         { path: "post", select: "title" }
       ]);
-      io.to(post.user.toString()).emit("newNotification", populatedNotification);
+      await pusher.trigger(`user-${post.user.toString()}`, "new-notification", JSON.parse(JSON.stringify(populatedNotification)));
     }
 
     // Re-fetch populated post to get comment user details immediately

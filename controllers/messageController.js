@@ -30,6 +30,16 @@ export const sendMessage = async (req, res) => {
         });
 
         await newMessage.save();
+
+        // Push real-time message to receiver via Pusher
+        const pusher = req.app.get("pusher");
+        await pusher.trigger(`user-${receiverId}`, "new-message", {
+            senderId: senderId.toString(),
+            senderName: req.user.name,
+            senderPic: req.user.profilePic,
+            text,
+        });
+
         res.status(201).json(newMessage);
     } catch (error) {
         res.status(500).json({ message: error.message });

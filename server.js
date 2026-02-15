@@ -8,65 +8,29 @@ import postRoutes from "./routes/postRoutes.js";
 import messageRoutes from "./routes/messageRoutes.js";
 import notificationRoutes from "./routes/notificationRoutes.js";
 import cloudinary from "./config/cloudinary.js";
-import { Server } from "socket.io";
-import http from "http";
+import pusher from "./config/pusher.js";
 
 dotenv.config();
 
 connectDB();
 
 const app = express();
-const server = http.createServer(app);
-const io = new Server(server, {
-  cors: {
-    origin: ["https://dev-collab-frontend-alpha.vercel.app", "http://localhost:5173"],
-    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-    credentials: true,
-  },
-});
 
-app.set("socketio", io);
+// Store pusher instance on app for use in controllers
+app.set("pusher", pusher);
 
-app.use(cors());
+app.use(cors({
+  origin: ["https://dev-collab-frontend-alpha.vercel.app", "http://localhost:5173"],
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+  credentials: true,
+}));
 app.use(express.json());
-
-// Socket.io Logic
-let onlineUsers = [];
-
-io.on("connection", (socket) => {
-  console.log("A user connected:", socket.id);
-
-  socket.on("join", (userId) => {
-    socket.join(userId);
-    if (!onlineUsers.some((user) => user.userId === userId)) {
-      onlineUsers.push({ userId, socketId: socket.id });
-    }
-    io.emit("getOnlineUsers", onlineUsers);
-  });
-
-  socket.on("sendMessage", ({ senderId, senderName, senderPic, receiverId, text }) => {
-    io.to(receiverId).emit("getMessage", {
-      senderId,
-      senderName,
-      senderPic,
-      text,
-    });
-  });
-
-  socket.on("disconnect", () => {
-    console.log("A user disconnected");
-    onlineUsers = onlineUsers.filter((user) => user.socketId !== socket.id);
-    io.emit("getOnlineUsers", onlineUsers);
-  });
-});
 
 app.use("/api/auth", authRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/posts", postRoutes);
 app.use("/api/messages", messageRoutes);
 app.use("/api/notifications", notificationRoutes);
-
-
 
 app.get("/", (req, res) => {
   res.send("API is running...");
@@ -89,7 +53,7 @@ app.use((err, req, res, next) => {
 const PORT = process.env.PORT || 5000;
 
 if (process.env.NODE_ENV !== "production") {
-  server.listen(PORT, () => {
+  app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
   });
 }

@@ -40,10 +40,10 @@ export const toggleFollow = async (req, res) => {
         type: "follow",
       });
 
-      // Emit real-time notification
-      const io = req.app.get("socketio");
+      // Emit real-time notification via Pusher
+      const pusher = req.app.get("pusher");
       const populatedNotification = await notification.populate("sender", "name profilePic");
-      io.to(targetUser._id.toString()).emit("newNotification", populatedNotification);
+      await pusher.trigger(`user-${targetUser._id.toString()}`, "new-notification", JSON.parse(JSON.stringify(populatedNotification)));
     }
 
     await req.user.save();
