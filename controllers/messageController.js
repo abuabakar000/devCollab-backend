@@ -31,16 +31,21 @@ export const sendMessage = async (req, res) => {
 
         await newMessage.save();
 
-        // Push real-time message to receiver via Pusher
-        const pusher = req.app.get("pusher");
-        await pusher.trigger(`user-${receiverId}`, "new-message", {
-            senderId: senderId.toString(),
-            senderName: req.user.name,
-            senderPic: req.user.profilePic,
-            text,
-        });
-
+        // Send response FIRST so sender sees their message immediately
         res.status(201).json(newMessage);
+
+        // Then push real-time message to receiver via Pusher (fire & forget)
+        try {
+            const pusher = req.app.get("pusher");
+            pusher.trigger(`user-${receiverId}`, "new-message", {
+                senderId: senderId.toString(),
+                senderName: req.user.name,
+                senderPic: req.user.profilePic,
+                text,
+            });
+        } catch (pusherErr) {
+            console.error("Pusher trigger failed:", pusherErr.message);
+        }
     } catch (error) {
         res.status(500).json({ message: error.message });
     }

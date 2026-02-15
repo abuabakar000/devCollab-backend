@@ -136,13 +136,17 @@ export const toggleLike = async (req, res) => {
           post: post._id,
         });
 
-        // Emit real-time notification via Pusher
-        const pusher = req.app.get("pusher");
-        const populatedNotification = await notification.populate([
-          { path: "sender", select: "name profilePic" },
-          { path: "post", select: "title" }
-        ]);
-        await pusher.trigger(`user-${post.user.toString()}`, "new-notification", JSON.parse(JSON.stringify(populatedNotification)));
+        // Emit real-time notification via Pusher (fire & forget)
+        try {
+          const pusher = req.app.get("pusher");
+          const populatedNotification = await notification.populate([
+            { path: "sender", select: "name profilePic" },
+            { path: "post", select: "title" }
+          ]);
+          pusher.trigger(`user-${post.user.toString()}`, "new-notification", JSON.parse(JSON.stringify(populatedNotification)));
+        } catch (pusherErr) {
+          console.error("Pusher trigger failed (like):", pusherErr.message);
+        }
       }
     }
 
@@ -179,13 +183,17 @@ export const addComment = async (req, res) => {
         post: post._id,
       });
 
-      // Emit real-time notification via Pusher
-      const pusher = req.app.get("pusher");
-      const populatedNotification = await notification.populate([
-        { path: "sender", select: "name profilePic" },
-        { path: "post", select: "title" }
-      ]);
-      await pusher.trigger(`user-${post.user.toString()}`, "new-notification", JSON.parse(JSON.stringify(populatedNotification)));
+      // Emit real-time notification via Pusher (fire & forget)
+      try {
+        const pusher = req.app.get("pusher");
+        const populatedNotification = await notification.populate([
+          { path: "sender", select: "name profilePic" },
+          { path: "post", select: "title" }
+        ]);
+        pusher.trigger(`user-${post.user.toString()}`, "new-notification", JSON.parse(JSON.stringify(populatedNotification)));
+      } catch (pusherErr) {
+        console.error("Pusher trigger failed (comment):", pusherErr.message);
+      }
     }
 
     // Re-fetch populated post to get comment user details immediately
