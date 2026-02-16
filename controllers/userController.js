@@ -43,8 +43,17 @@ export const toggleFollow = async (req, res) => {
       // Emit real-time notification via Pusher (fire & forget)
       try {
         const pusher = req.app.get("pusher");
-        const populatedNotification = await notification.populate("sender", "name profilePic");
-        pusher.trigger(`user-${targetUser._id.toString()}`, "new-notification", JSON.parse(JSON.stringify(populatedNotification)));
+        pusher.trigger(`user-${targetUser._id.toString()}`, "new-notification", {
+          _id: notification._id,
+          type: "follow",
+          sender: {
+            _id: req.user._id,
+            name: req.user.name,
+            profilePic: req.user.profilePic
+          },
+          read: false,
+          createdAt: notification.createdAt
+        });
       } catch (pusherErr) {
         console.error("Pusher trigger failed (follow):", pusherErr.message);
       }

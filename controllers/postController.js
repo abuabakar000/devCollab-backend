@@ -139,11 +139,21 @@ export const toggleLike = async (req, res) => {
         // Emit real-time notification via Pusher (fire & forget)
         try {
           const pusher = req.app.get("pusher");
-          const populatedNotification = await notification.populate([
-            { path: "sender", select: "name profilePic" },
-            { path: "post", select: "title" }
-          ]);
-          pusher.trigger(`user-${post.user.toString()}`, "new-notification", JSON.parse(JSON.stringify(populatedNotification)));
+          pusher.trigger(`user-${post.user.toString()}`, "new-notification", {
+            _id: notification._id,
+            type: "like",
+            sender: {
+              _id: req.user._id,
+              name: req.user.name,
+              profilePic: req.user.profilePic
+            },
+            post: {
+              _id: post._id,
+              title: post.title
+            },
+            read: false,
+            createdAt: notification.createdAt
+          });
         } catch (pusherErr) {
           console.error("Pusher trigger failed (like):", pusherErr.message);
         }
@@ -186,11 +196,21 @@ export const addComment = async (req, res) => {
       // Emit real-time notification via Pusher (fire & forget)
       try {
         const pusher = req.app.get("pusher");
-        const populatedNotification = await notification.populate([
-          { path: "sender", select: "name profilePic" },
-          { path: "post", select: "title" }
-        ]);
-        pusher.trigger(`user-${post.user.toString()}`, "new-notification", JSON.parse(JSON.stringify(populatedNotification)));
+        pusher.trigger(`user-${post.user.toString()}`, "new-notification", {
+          _id: notification._id,
+          type: "comment",
+          sender: {
+            _id: req.user._id,
+            name: req.user.name,
+            profilePic: req.user.profilePic
+          },
+          post: {
+            _id: post._id,
+            title: post.title
+          },
+          read: false,
+          createdAt: notification.createdAt
+        });
       } catch (pusherErr) {
         console.error("Pusher trigger failed (comment):", pusherErr.message);
       }
