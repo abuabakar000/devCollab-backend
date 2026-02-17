@@ -9,6 +9,7 @@ import messageRoutes from "./routes/messageRoutes.js";
 import notificationRoutes from "./routes/notificationRoutes.js";
 import cloudinary from "./config/cloudinary.js";
 import pusher from "./config/pusher.js";
+import activityMiddleware from "./middleware/activityMiddleware.js";
 
 dotenv.config();
 
@@ -25,6 +26,7 @@ app.use(cors({
   credentials: true,
 }));
 app.use(express.json());
+app.use(activityMiddleware);
 
 app.use("/api/auth", authRoutes);
 app.use("/api/users", userRoutes);
