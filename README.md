@@ -5,6 +5,8 @@
 
 The robust server-side engine powering devCollab, focusing on performance, real-time communication, and secure data management.
 
+**🌐 Live Site:** [https://dev-collab-frontend-alpha.vercel.app/](https://dev-collab-frontend-alpha.vercel.app/)
+
 ## 🏗️ Architecture
 - **Layered Pattern**: Separate Routes, Controllers, Models, and Middleware.
 - **Real-time Engine**: Leverages **Pusher Channels** for low-latency updates without the overhead of maintaining raw WebSockets.
